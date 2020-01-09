@@ -1,0 +1,28 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/motorControl.h
+iostream
+-
+string.h
+-
+fcntl.h
+-
+termios.h
+-
+unistd.h
+-
+
+/home/denis/CLionProjects/motorControl/main.cpp
+motorControl.h
+/home/denis/CLionProjects/motorControl/motorControl.h
+
+/home/denis/CLionProjects/motorControl/src/motorControl.cpp
+motorControl.h
+/home/denis/CLionProjects/motorControl/src/motorControl.h
+

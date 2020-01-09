@@ -1,0 +1,1 @@
+/usr/bin/c++  -g   CMakeFiles/motorControl.dir/main.cpp.o CMakeFiles/motorControl.dir/src/motorControl.cpp.o  -o motorControl 

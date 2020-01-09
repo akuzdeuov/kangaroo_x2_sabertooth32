@@ -1,0 +1,3 @@
+/home/denis/CLionProjects/motorControl/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/denis/CLionProjects/motorControl/cmake-build-debug/CMakeFiles/motorControl.dir
+/home/denis/CLionProjects/motorControl/cmake-build-debug/CMakeFiles/edit_cache.dir
