@@ -32,21 +32,22 @@ public:
     void closeSerialPort();
 
     // start motors
-    void startMotor(char c);
+    void startMotor(char &motorID);
 
     // get positions
-    void getPosition(char c);
+    int getPosition(char &motorID);
 
     // set positions
-    void setPosition(char c);
+    void setPosition(char &motorID, int &pos);
 
     // home position
-    void homePosition(char c);
+    void homePosition(char &motorID);
 
 private:
     std::string portName = "/dev/ttyUSB0";
     speed_t baudRate = B19200;
     int fd = 0; // // file description for the serial port
+    useconds_t readTime = 25000;
 };
 
 #endif //MOTORCONTROL_MOTORCONTROL_H
