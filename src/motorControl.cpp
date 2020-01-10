@@ -55,40 +55,84 @@ void Kangaroo::closeSerialPort() {
     std::cout << "[INFO]: Port " << portName << " is closed!" << std::endl;
 }
 
-void Kangaroo::startMotor(char c) {
-    char msg[] = {c, ',', 's', 't', 'a', 'r', 't', '\r'};
+void Kangaroo::startMotor(char &motorID) {
+    char msg[] = {motorID, ',', 's', 't', 'a', 'r', 't', '\r'};
     write(fd, msg, sizeof(msg));
 }
 
-
-void Kangaroo::getPosition(char c) {
+int Kangaroo::getPosition(char &motorID) {
     char buffer[9];
     //memset(&buffer, '\0', sizeof(buffer));
-    char getmsgx[] = {c, ',', 'g', 'e', 't', 'p', '\r'};
+    char msg[] = {motorID, ',', 'g', 'e', 't', 'p', '\r'};
+    write(fd, msg, sizeof(msg));
+    usleep(readTime);
 
-    write(fd, getmsgx, sizeof(getmsgx));
-    usleep(20000);
     ssize_t bytes = read(fd, &buffer, sizeof(buffer));
 
     //std::cout << "[M" << c << "] Returned number of bytes: " << bytes << std::endl;
-    std::cout << "[GETPOS]: Port " << fd << ", Motor " << c << ": " << buffer << std::endl;
+    // std::cout << "[GETPOS]: Port " << fd << ", Motor " << c << ": " << buffer << std::endl;
 
+    std::string str;
+    for( ssize_t ind = 3; ind < bytes; ++ind){
+        //std::cout << buffer[ind];
+        str += buffer[ind];
+    }
+
+    //int pos = std::stoi(str);
+    int pos = 0;
+    std::cout << "[GETPOS]: Port " << fd << ", Motor " << motorID << ": " << str;// << " mV" << std::endl;
+
+    return pos;
 }
 
 
-void Kangaroo::setPosition(char c) {
-    char msg[] = {c, ',', 'p', '3', '0', '0', '0', '\r'};
-    write(fd, msg, sizeof(msg));
+void Kangaroo::setPosition(char &motorID, int &pos) {
+    // identify motor to send command
+    std::string str1;
+    if(motorID == '1'){
+        str1 = "1,p";
+    }else if(motorID == '2'){
+        str1 = "2,p";
+    }
+    // convert integer to string
+    std::string str2 = std::to_string(pos);
+    // check the command
+    switch(str2.length()){
+        case 1:
+            str2 = "000" + str2;
+            break;
+        case 2:
+            str2 = "00" + str2;
+            break;
+        case 3:
+            str2 = "0" + str2;
+            break;
+        case 4:
+            str2 = str2;
+            break;
+        default:
+            str2 = "0000";
+            break;
+    }
 
-    std::cout << "[SETPOS]: Port " << fd << ", Motor " << c << ": " << msg << std::endl;
+    // construct the final command
+    std::string cmdStr = str1 + str2 + '\r';
+
+    //char msg[] = {motorID, ',', 'p', '0', '9', '0', '0', '\r'};
+    // convert string to char
+    char const *chCmd = cmdStr.c_str();
+    // send the command to the motor
+    write(fd, chCmd, sizeof(chCmd));
+    // print the sent command
+    std::cout << "[SETPOS]: Port " << fd << ", Motor " << motorID << ": " << pos << " mV" << std::endl;
 
 }
 
-void Kangaroo::homePosition(char c) {
-    char msg[] = {c, ',', 'p', '2', '5', '0', '0', '\r'};
+void Kangaroo::homePosition(char &motorID) {
+    char msg[] = {motorID, ',', 'p', '2', '5', '0', '0', '\r'};
     write(fd, msg, sizeof(msg));
 
-    std::cout << "[HOMPOS]: Port " << fd << ", Motor " << c << ": " << msg << std::endl;
+    std::cout << "[HOMPOS]: Port " << fd << ", Motor " << motorID << ": " << msg << std::endl;
 
 }
 
