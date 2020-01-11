@@ -10,16 +10,16 @@ using namespace std::chrono;
 
 int main(){
     // generate a simple sinusoidal trajectory
-    int size = 50;
+    int size = 40;
     int posM1[size];
     int posM2[size];
     int posM3[size];
 
     //phase shift, amplitudes and angular velocity
     double phase = 120*deg2rad;
-    double amp1 = 800.0;
-    double amp2 = 800.0;
-    double amp3 = 800.0;
+    double amp1 = 2000.0;
+    double amp2 = 2000.0;
+    double amp3 = 2000.0;
     double w = 1;
 
     // home position
