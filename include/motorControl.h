@@ -1,11 +1,12 @@
 //
-// Created by denis on 1/6/20.
+// Created by askat on 1/6/20.
 //
 
 #ifndef MOTORCONTROL_MOTORCONTROL_H
 #define MOTORCONTROL_MOTORCONTROL_H
 
 #include <iostream>
+#include <utility>
 // C library headers
 #include <string.h>
 // Linux headers
@@ -34,11 +35,17 @@ public:
     // start motors
     void startMotor(char &motorID);
 
-    // get positions
-    int getPosition(char &motorID);
+    // get motor position
+    std::pair<int, bool> getPosition(char &motorID);
 
-    // set positions
+    // get motor speed
+    std::pair<int, bool> getSpeed(char &motorID);
+
+    // set a reference position
     void setPosition(char &motorID, int &pos);
+
+    // set a reference position and speed
+    void setPositionSpeed(char &motorID, int &pos, int &speed);
 
     // home position
     void homePosition(char &motorID);
@@ -47,7 +54,7 @@ private:
     std::string portName = "/dev/ttyUSB0";
     speed_t baudRate = B19200;
     int fd = 0; // // file description for the serial port
-    useconds_t readTime = 25000;
+    useconds_t readTime = 25000; // time to read position (microsecond)
 };
 
 #endif //MOTORCONTROL_MOTORCONTROL_H
