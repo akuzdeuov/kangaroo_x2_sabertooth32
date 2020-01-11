@@ -10,16 +10,16 @@ using namespace std::chrono;
 
 int main(){
     // generate a simple sinusoidal trajectory
-    int size = 120;
+    int size = 50;
     int posM1[size];
     int posM2[size];
     int posM3[size];
 
     //phase shift, amplitudes and angular velocity
     double phase = 120*deg2rad;
-    double amp1 = 1800.0;
-    double amp2 = 1800.0;
-    double amp3 = 1800.0;
+    double amp1 = 800.0;
+    double amp2 = 800.0;
+    double amp3 = 800.0;
     double w = 1;
 
     // home position
@@ -72,20 +72,31 @@ int main(){
     kangaroo1.setPosition(M1, posM1[0]);
     kangaroo2.setPosition(M1, posM2[0]);
     kangaroo2.setPosition(M2, posM3[0]);
-    usleep(4000000);
+    usleep(2000000);
+
+    // get positions
+    kangaroo2.getPosition(M1);
+    kangaroo1.getPosition(M1);
+    kangaroo2.getPosition(M2);
 
     int counter = 1;
     while(counter < size){
         std:: cout << "Iteration: " << counter << "-------------" << std::endl;
+        // set positions
         kangaroo2.setPosition(M1, posM2[counter]);
         kangaroo1.setPosition(M1, posM1[counter]);
         kangaroo2.setPosition(M2, posM3[counter]);
 
         usleep(100000);
-
+        // get positions
         kangaroo2.getPosition(M1);
         kangaroo1.getPosition(M1);
         kangaroo2.getPosition(M2);
+
+        // get speeds
+        kangaroo2.getSpeed(M1);
+        kangaroo1.getSpeed(M1);
+        kangaroo2.getSpeed(M2);
 
         ++counter;
     }
@@ -99,12 +110,8 @@ int main(){
     kangaroo2.getPosition(M1);
     kangaroo2.getPosition(M2);
 
-
     kangaroo1.closeSerialPort();
     kangaroo2.closeSerialPort();
-
-
-
 
     return 0;
 }
