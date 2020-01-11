@@ -5,9 +5,9 @@ void Kangaroo::openSerialPort() {
     fd = open(portName.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
 
     if(fd < 0) {
-        std::cerr << "[ERROR]: Unable to open port " << portName << std::endl;
+        std::cerr << "[ERROR] Unable to open the port " << portName << std::endl;
     } else {
-        std::cout << "[INFO]: Port " << fd << " is open!" << std::endl;
+        std::cout << "[INFO] Port " << fd << " was successfully opened!" << std::endl;
     }
 
 }
@@ -44,15 +44,15 @@ void Kangaroo::configureSerialPort() {
 
 
     if((tcsetattr(fd, TCSANOW, &SerialPortSettings)) != 0) // Set the attributes to the termios structure
-        std::cerr << "[ERROR]: Unable to configure port " << portName << std::endl;
+        std::cerr << "[ERROR] Unable to configure port " << portName << std::endl;
     else
-        std::cout << "[INFO]: BaudRate = " << baudRate << ", StopBits = 1, Parity = none" << std::endl;
+        std::cout << "[INFO] BaudRate = " << baudRate << ", StopBits = 1, Parity = none" << std::endl;
 
 }
 
 void Kangaroo::closeSerialPort() {
     close(fd);
-    std::cout << "[INFO]: Port " << portName << " is closed!" << std::endl;
+    std::cout << "[INFO] Port " << portName << " was successfully closed!" << std::endl;
 }
 
 void Kangaroo::startMotor(char &motorID) {
@@ -60,29 +60,59 @@ void Kangaroo::startMotor(char &motorID) {
     write(fd, msg, sizeof(msg));
 }
 
-int Kangaroo::getPosition(char &motorID) {
-    char buffer[9];
+std::pair<int, bool> Kangaroo::getPosition(char &motorID) {
+    char readBuffer[9];
     //memset(&buffer, '\0', sizeof(buffer));
-    char msg[] = {motorID, ',', 'g', 'e', 't', 'p', '\r'};
-    write(fd, msg, sizeof(msg));
+    char getMsg[] = {motorID, ',', 'g', 'e', 't', 'p', '\r'};
+    write(fd, getMsg, sizeof(getMsg));
     usleep(readTime);
-
-    ssize_t bytes = read(fd, &buffer, sizeof(buffer));
-
-    //std::cout << "[M" << c << "] Returned number of bytes: " << bytes << std::endl;
-    // std::cout << "[GETPOS]: Port " << fd << ", Motor " << c << ": " << buffer << std::endl;
-
+    // read buffer
+    ssize_t readBytes = read(fd, &readBuffer, sizeof(readBuffer));
+    // extract numerical token
     std::string str;
-    for( ssize_t ind = 3; ind < bytes; ++ind){
+    for( ssize_t ind = 3; ind < readBytes; ++ind){
         //std::cout << buffer[ind];
-        str += buffer[ind];
+        str += readBuffer[ind];
     }
 
-    //int pos = std::stoi(str);
-    int pos = 0;
-    std::cout << "[GETPOS]: Port " << fd << ", Motor " << motorID << ": " << str;// << " mV" << std::endl;
+    // container for position info (current position, status)
+    std::pair<int, bool> positionStatus;
+    // current position
+    positionStatus.first = std::stoi(str);
+    // check whether the motor is moving or not
+    positionStatus.second = readBuffer[2] == 'P';
+    // print position info
+    std::cout << "[GETPOS] Port: " << fd << ", Motor: " << motorID << ", Position: " << positionStatus.first << " mV, Status: ";
+    std::cout << (positionStatus.second ? "Not Moving" : "Moving") << std::endl;
 
-    return pos;
+    return positionStatus;
+}
+
+std::pair<int, bool> Kangaroo::getSpeed(char &motorID) {
+    char readBuffer[9];
+    //memset(&buffer, '\0', sizeof(buffer));
+    char getMsg[] = {motorID, ',', 'g', 'e', 't', 's', '\r'};
+    write(fd, getMsg, sizeof(getMsg));
+    usleep(readTime);
+    // read buffer
+    ssize_t readBytes = read(fd, &readBuffer, sizeof(readBuffer));
+    // extract numerical token
+    std::string str;
+    for( ssize_t ind = 3; ind < readBytes; ++ind){
+        str += readBuffer[ind];
+    }
+    // container for speed info (current speed, status)
+    std::pair<int, bool> speedStatus;
+    // current speed
+    speedStatus.first = std::stoi(str);
+    // check whether the speed is max or still accelerating
+    speedStatus.second = readBuffer[2] == 'S';
+    // print speed info
+    std::cout << "[GETSPD] Port: " << fd << ", Motor: " << motorID << ", Speed: " << speedStatus.first << " mV, Status: ";
+    std::cout << (speedStatus.second ? "Max Speed" : "Accelerating") << std::endl;
+
+    return speedStatus;
+
 }
 
 
@@ -124,7 +154,34 @@ void Kangaroo::setPosition(char &motorID, int &pos) {
     // send the command to the motor
     write(fd, chCmd, sizeof(chCmd));
     // print the sent command
-    std::cout << "[SETPOS]: Port " << fd << ", Motor " << motorID << ": " << pos << " mV" << std::endl;
+    std::cout << "[SETPOS] Port " << fd << ", Motor: " << motorID << ": Reference Position: " << pos << " mV" << std::endl;
+
+}
+
+void Kangaroo::setPositionSpeed(char &motorID, int &pos, int &speed) {
+    // 1,p1000 s200
+    // identify motor to send command
+    std::string init;
+    if(motorID == '1'){
+        init = "1,p";
+    }else if(motorID == '2'){
+        init = "2,p";
+    }
+
+    std::string posStr = std::to_string(pos);
+    std::string spdStr = std::to_string(speed);
+
+    // construct the final command
+    std::string cmdStr = init + posStr + spdStr + '\r';
+
+    //char msg[] = {motorID, ',', 'p', '0', '9', '0', '0', '\r'};
+    // convert string to char
+    char const *chCmd = cmdStr.c_str();
+    // send the command to the motor
+    write(fd, chCmd, sizeof(chCmd));
+    // print the sent command
+    std::cout << "[SETPOS&SPD] Port " << fd << ", Motor: " << motorID
+              <<": Reference Position and Speed: " << pos << " " << speed << " mV" << std::endl;
 
 }
 
@@ -132,7 +189,7 @@ void Kangaroo::homePosition(char &motorID) {
     char msg[] = {motorID, ',', 'p', '2', '5', '0', '0', '\r'};
     write(fd, msg, sizeof(msg));
 
-    std::cout << "[HOMPOS]: Port " << fd << ", Motor " << motorID << ": " << msg << std::endl;
+    std::cout << "[HOMPOS] Port: " << fd << ", Motor: " << motorID << ": Home Position: " << msg << std::endl;
 
 }
 
